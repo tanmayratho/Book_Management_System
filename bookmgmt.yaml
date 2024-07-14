@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: book-management-app
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: book-management-app
+  template:
+    metadata:
+      labels:
+        app: book-management-app
+    spec:
+      containers:
+      - name: book-management-app
+        image: docker-registry/book-management-app:latest
+        ports:
+        - containerPort: 5000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: book-management-secrets
+              key: database-url
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: book-management-secrets
+              key: secret-key
+        - name: JWT_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: book-management-secrets
+              key: jwt-secret-key
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: book-management-service
+spec:
+  selector:
+    app: book-management-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 5000
+  type: LoadBalancer
